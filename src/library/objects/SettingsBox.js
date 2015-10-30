@@ -6,15 +6,30 @@ To be dynamically used on the settings page
 (function(){
 	"use strict";
 	
+	var dependenceCheck = [
+		/** First Element  => Depending Element **/
+		[
+		],
+		/** Second Element => Depended Element **/
+		[
+		],
+		/** Third Element  => Mapped Values **/
+		{
+		}
+	];
+	
 	window.SettingsBox = function( info ){
 		this.config = info.id;
 		this.element = $("#factory .settingBox").clone().appendTo("#wrapper .settings");
 		$(".title", this.element).text( KC3Meta.term( info.name ) );
 		this.soundPreview = false;
 		this.bound = $.extend({min:-Infinity,max:Infinity,length_min:0,length_max:Infinity,type:"String"},info.bound || {});
+		this.conditions = info.cond || [];
 		this[info.type]( info.options );
 		if(parseInt(info.chui) || 0 === 1)
 			$(this.element).addClass("dangerous");
+		$(this.element).data("depend",this.conditions);
+		updateItemConditions();
 	};
 	
 	SettingsBox.prototype.check = function( options ){
@@ -34,6 +49,7 @@ To be dynamically used on the settings page
 				ConfigManager[ self.config ] = $(this).prop("checked");
 				ConfigManager.save();
 				elementControl($(this).parent().siblings(".note"),'',KC3Meta.term("SettingsErrorNG"));
+				updateItemConditions();
 			})
 		);
 	};
@@ -114,20 +130,45 @@ To be dynamically used on the settings page
 				ConfigManager[ self.config ] = $(this).val();
 				ConfigManager.save();
 				elementControl($(this).parent().siblings(".note"),'',KC3Meta.term("SettingsErrorNG"));
+				updateItemConditions();
 			})
 		);
 		$(".options", this.element).append( options.label );
 	};
 	
 	SettingsBox.prototype.radio = function( options ){
+		/* Choice Data Format :
+			[ Value, Label, Danger, Conditions ]
+			Value     - simply value (number / string)
+			Label     - simple explanatory text
+			Danger    - requires a confirmation before selecting the value
+			Condition - set of variable and value that compromises the
+			            equal condition, to make the option is visible.
+			
+			Condition Structure:
+			[ Variable, Comparison, Value ]
+			
+			Comparison Table:
+			eq - loose equal (default)
+			se - strictly equal
+			no - loose not equal
+			sn - strictly not equal
+			lt - less than
+			le - less than or equal
+			gt - greater than
+			ge - greater than or equal
+		*/
 		var self = this;
 		var choiceClass = "choices_" + this.config;
 		for(var ctr in options.choices){
+			// !checkCondition(options.choices[ctr][3])
 			$(".options", this.element).append(
 				$("#factory .radioBox")
 				.clone()
 				.addClass( choiceClass )
 				.addClass( (options.choices[ctr][0]==ConfigManager[ self.config ])?"active":"" )
+				.addClass( (options.choices[ctr][2] ? "dangerous" : "") )
+				.data("depend", options.choices[ctr][3] )
 				.data("class", choiceClass )
 				.data("value", options.choices[ctr][0] )
 				.html( KC3Meta.term( options.choices[ctr][1] ) )
@@ -135,7 +176,11 @@ To be dynamically used on the settings page
 		}
 		
 		$("."+choiceClass, this.element).on("click", function(){
-			console.log(this,arguments);
+			// Dangerous Settings Change Attempt
+			if(isDangerous($(this),self.config,$(this).data("value"))) {
+				return false;
+			}
+			console.log($(this),arguments);
 			$("."+$(this).data("class")).removeClass("active");
 			$(this).addClass("active");
 			ConfigManager[ self.config ] = $(this).data("value");
@@ -162,12 +207,46 @@ To be dynamically used on the settings page
 			// Refresh page when a language option is clicked
 			if(self.config == "language"){
 				window.location.reload();
+			} else {
+				updateItemConditions();
 			}
 		});
 	};
 	
 	function elementControl(ele,colorCSS,msg) {
 		return ele.stop(true, true).css('color',colorCSS).text(msg).show().fadeOut(2000);
+	}
+	
+	function updateItemConditions() {
+		
+	}
+	
+	function checkCondition(conditions) {
+		conditions = conditions || [];
+		return conditions.reduce(function(cond,rule){
+			return cond && (function(_var_,_cmp_,_val_){
+				var cfg = ConfigManager[_var_];
+				switch(_cmp_){
+					case 'lt':
+						return cfg <   _val_;
+					case 'le':
+						return cfg <=  _val_;
+					case 'gt':
+						return cfg >   _val_;
+					case 'ge':
+						return cfg >=  _val_;
+					case 'sn':
+						return cfg !== _val_;
+					case 'no':
+						return cfg !=  _val_;
+					case 'se':
+						return cfg === _val_;
+					case 'eq':
+					default:
+						return cfg ==  _val_;
+				}
+			}).apply(undefined,rule)
+		},true);
 	}
 	
 	function isDangerous(element,key,current) {
@@ -180,6 +259,7 @@ To be dynamically used on the settings page
 		else
 			return false;
 	}
+	
 	function isInvalid(bound,value) {
 		// 00000
 		// lsb-0 : is error
@@ -187,7 +267,6 @@ To be dynamically used on the settings page
 		// lsb-2 : value check if set, length check if not
 		// having all bit is set means invalid value
 		// otherwise, having all bit is unset means valid value
-		console.log(bound);
 		switch(true) {
 			case(bound.type === "Number" && (isNaN(Number(value)) || (value || null) === null)): return -1; // Number Expectation
 			case(String(value).length > (Number(bound.length_max) || Infinity)): return  3;

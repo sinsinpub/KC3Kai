@@ -196,7 +196,8 @@ body {
 	border:1px solid #369;
 	color:#fff;
 }
-.settingBox.dangerous {
+.settingBox.dangerous,
+.settingBox .radioBox.dangerous {
 	color: red;
 	background:#f68383;
 }

@@ -102,6 +102,9 @@
 				"id" : "info_btstamp",
 				"name" : "SettingsBattleStamp",
 				"type" : "check",
+				"cond" : [
+					["info_battle", "e", true]
+				],
 				"options" : {}
 			},
 			{
@@ -231,7 +234,7 @@
 						[ 0, "None" ],
 						[ 1, "POP!" ],
 						[ 3, "DING!" ],
-						[ 2, "SettingsCustom" ]
+						[ 2, "SettingsCustom"]
 					]
 				}
 			},
