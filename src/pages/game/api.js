@@ -309,6 +309,7 @@ var interactions = {
 		var subtitleText = false;
 		var quoteIdentifier = "";
 		var quoteVoiceNum = request.voiceNum;
+		var quoteSpeaker = "";
 		switch(request.voicetype){
 			case "titlecall":
 				quoteIdentifier = "titlecall_"+request.filename;
@@ -318,6 +319,7 @@ var interactions = {
 				break;
 			default:
 				quoteIdentifier = request.shipID;
+				quoteSpeaker = KC3Meta.shipName(KC3Master.ship(quoteIdentifier).api_name);
 				break;
 		}
 		subtitleText = KC3Meta.quote( quoteIdentifier, quoteVoiceNum );
@@ -349,6 +351,9 @@ var interactions = {
 				subtitleVanishTimer = false;
 				$(".overlay_subtitles").fadeOut(2000);
 			}, millis);
+			if(!!quoteSpeaker){
+				$(".overlay_subtitles").html("{0}: {1}".format(quoteSpeaker, subtitleText));
+			}
 		}
 	}
 	
