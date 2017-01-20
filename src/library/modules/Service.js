@@ -31,6 +31,7 @@ See Manifest File [manifest.json] under "background" > "scripts"
 	}
 	
 	localStorage.kc3version = chrome.runtime.getManifest().version;
+	localStorage.lastTabId = 0;
 	
 	window.KC3Service = {
 		
@@ -80,6 +81,7 @@ See Manifest File [manifest.json] under "background" > "scripts"
 		We don't want global runtime message that will activate games on all windows
 		------------------------------------------*/
 		"activateGame" :function(request, sender, response){
+			localStorage.lastTabId = request.tabId;
 			(new TMsg(request.tabId, "gamescreen", "activateGame", {})).execute();
 		},
 		
@@ -103,6 +105,7 @@ See Manifest File [manifest.json] under "background" > "scripts"
 		We don't want global runtime message that will show overlays on all windows
 		------------------------------------------*/
 		"questOverlay" :function(request, sender, response){
+			localStorage.lastTabId = request.tabId;
 			(new TMsg(request.tabId, "gamescreen", "questOverlay", {
 				questlist: request.questlist
 			})).execute();
@@ -115,6 +118,7 @@ See Manifest File [manifest.json] under "background" > "scripts"
 		We don't want global runtime message that will clear overlays on all windows
 		------------------------------------------*/
 		"clearOverlays" :function(request, sender, response){
+			localStorage.lastTabId = request.tabId;
 			(new TMsg(request.tabId, "gamescreen", "clearOverlays", {})).execute();
 		},
 		
@@ -122,6 +126,7 @@ See Manifest File [manifest.json] under "background" > "scripts"
 		When sortie to a world map, show node markers
 		------------------------------------------*/
 		"mapMarkers" :function(request, sender, response){
+			localStorage.lastTabId = request.tabId;
 			(new TMsg(request.tabId, "gamescreen", "markersOverlay", {
 				worldId: request.nextNode.api_maparea_id,
 				mapId: request.nextNode.api_mapinfo_no,
@@ -140,6 +145,15 @@ See Manifest File [manifest.json] under "background" > "scripts"
 			response({value: ConfigManager[request.id]});
 		},
 		
+		/* RELOAD CONFIG
+		Notify other components of extension to reload configs
+		------------------------------------------*/
+		"reloadConfig" :function(request, sender, response){
+			(new TMsg(request.tabId || Number(localStorage.lastTabId),
+				"gamescreen", "reloadConfig")).execute();
+			//(new RMsg("strategyroom", "reloadConfig")).execute();
+		},
+		
 		/* FIT SCREEN
 		Auto-resize browser window to fit the game screen
 		------------------------------------------*/
@@ -151,6 +165,7 @@ See Manifest File [manifest.json] under "background" > "scripts"
 		Returns boolean if the tab is muted or not
 		------------------------------------------*/
 		"isMuted" :function(request, sender, response){
+			localStorage.lastTabId = request.tabId;
 			chrome.tabs.get(request.tabId, function(tabInfo){
 				try {
 					response(tabInfo.mutedInfo.muted);
@@ -165,6 +180,7 @@ See Manifest File [manifest.json] under "background" > "scripts"
 		Mute or unmute the tab
 		------------------------------------------*/
 		"toggleSounds" :function(request, sender, response){
+			localStorage.lastTabId = request.tabId;
 			chrome.tabs.get(request.tabId, function(tabInfo){
 				try {
 					chrome.tabs.update(request.tabId, {
@@ -218,7 +234,8 @@ See Manifest File [manifest.json] under "background" > "scripts"
 		When a ship speaks, show subtitles
 		------------------------------------------*/
 		"subtitle" :function(request, sender, response){
-			console.debug("subtitle", request);
+			//console.debug("subtitle", request);
+			localStorage.lastTabId = request.tabId;
 			(new TMsg(request.tabId, "gamescreen", "subtitle", {
 				voicetype: request.voicetype,
 				filename: request.filename || false,
@@ -253,6 +270,19 @@ See Manifest File [manifest.json] under "background" > "scripts"
 		
 		}
 	});
+	
+	/* Long-lived connection port message Listener
+	https://developer.chrome.com/extensions/devtools#content-script-to-devtools
+	https://developer.chrome.com/extensions/messaging#connect
+	This script will wait for messages from other parts of the extension
+	and execute what they want if applicable
+	------------------------------------------*/
+	/*
+	chrome.runtime.onConnect.addListener(function(port){
+		if( port.name === "DevKC3Kai" ){
+		}
+	});
+	*/
 	
 	/* New cookie hack
 	Listen to change in cookies on the DMM website

@@ -639,6 +639,21 @@
 		// Devbuild: auto-activate dashboard while designing
 		// Activate();
 
+		/* Listen to messaging triggers
+		-----------------------------------*/
+		chrome.runtime.onMessage.addListener(function(request, sender, response){
+			console.log(request, sender, response);
+			if(isRunning && (request.identifier||"") === "kc3_gamepanel"){
+				if(typeof NatsuiroListeners[request.action] !== "undefined"){
+					NatsuiroListeners[request.action](request, response, sender);
+					return true;
+				} else {
+					console.warn("No event found for keyword", request.action);
+				}
+			}
+			return false;
+		});
+
 		// Start Network listener
 		KC3Network.addGlobalListener(function(event, data){
 			if(isRunning || (["GameStart","HomeScreen","CatBomb"].indexOf(event)+1)){
@@ -790,6 +805,10 @@
 				window.location.href = "../../nomaster.html";
 				return false;
 			}
+		},
+
+		ReloadConfig: function(data){
+			ConfigManager.load();
 		},
 
 		CatBomb: function(data){

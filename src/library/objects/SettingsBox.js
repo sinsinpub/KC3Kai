@@ -32,6 +32,7 @@ To be dynamically used on the settings page
 				"to default:", ConfigManager.defaults()[self.config]);
 			ConfigManager.resetValueOf(self.config);
 			elementControl($(this).siblings(".note"),'',KC3Meta.term("SettingsErrorNG"));
+			notifyGamePanel();
 			// Refresh this option
 			//window.location.reload();
 			//$(this).hide();
@@ -61,6 +62,7 @@ To be dynamically used on the settings page
 				ConfigManager[ self.config ] = $(this).prop("checked");
 				ConfigManager.save();
 				elementControl($(this).parent().siblings(".note"),'',KC3Meta.term("SettingsErrorNG"));
+				notifyGamePanel();
 			})
 		);
 	};
@@ -101,6 +103,7 @@ To be dynamically used on the settings page
 				ConfigManager[ self.config ] = window[self.bound.type==="Integer"?"Number":self.bound.type]($(this).val());
 				ConfigManager.save();
 				elementControl($(this).parent().siblings(".note"),'',KC3Meta.term("SettingsErrorNG"));
+				notifyGamePanel();
 				
 				// If changed volume, test play the alert sound
 				if(self.config == "alert_volume"){
@@ -143,6 +146,7 @@ To be dynamically used on the settings page
 				ConfigManager[ self.config ] = $(this).val();
 				ConfigManager.save();
 				elementControl($(this).parent().siblings(".note"),'',KC3Meta.term("SettingsErrorNG"));
+				notifyGamePanel();
 			})
 		);
 		$(".options", this.element).append( options.label );
@@ -170,6 +174,7 @@ To be dynamically used on the settings page
 			ConfigManager[ self.config ] = $(this).data("value");
 			ConfigManager.save();
 			elementControl($(this).parent().siblings(".note"),'',KC3Meta.term("SettingsErrorNG"));
+			notifyGamePanel();
 			
 			// If changed sound type, test play the alert sound
 			if(self.config == "alert_type"){
@@ -209,6 +214,7 @@ To be dynamically used on the settings page
 						ConfigManager[ self.config ] = newValue;
 						ConfigManager.save();
 						elementControl($(this).parent().siblings(".note"), '', KC3Meta.term("SettingsErrorNG"));
+						notifyGamePanel();
 					} catch (e) {
 						elementControl($(this).parent().siblings(".note"), 'red', KC3Meta.term("SettingsErrorSuper"));
 					}
@@ -227,6 +233,7 @@ To be dynamically used on the settings page
 					ConfigManager[ self.config ] = $(this).val();
 					ConfigManager.save();
 					elementControl($(this).parent().siblings(".note"), '', KC3Meta.term("SettingsErrorNG"));
+					notifyGamePanel();
 				})
 		);
 	};
@@ -243,6 +250,7 @@ To be dynamically used on the settings page
 					ConfigManager[ self.config ] = $(this).val();
 					ConfigManager.save();
 					elementControl($(this).parent().siblings(".note"), '', KC3Meta.term("SettingsErrorNG"));
+					notifyGamePanel();
 				})
 		);
 		
@@ -261,6 +269,10 @@ To be dynamically used on the settings page
 		return ele.stop(true, true).css('color',colorCSS).text(msg).show().fadeOut(colorCSS ? 5000 : 2000);
 	}
 	
+	function notifyGamePanel() {
+		new RMsg("service", "reloadConfig").execute();
+	}
+	
 	function isDangerous(element,key,current) {
 		var 
 			isDG = $(element).hasClass("dangerous"),
@@ -271,6 +283,7 @@ To be dynamically used on the settings page
 		else
 			return false;
 	}
+	
 	function isInvalid(bound,value) {
 		// 00000
 		// lsb-0 : is error

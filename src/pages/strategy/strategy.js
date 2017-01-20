@@ -94,6 +94,19 @@
 			$(this).empty().hide();
 		});
 		
+		/* Listen to messaging triggers
+		-----------------------------------*/
+		chrome.runtime.onMessage.addListener(function(request, sender, response){
+			if(!KC3StrategyTabs.loading && (request.identifier||"") === "kc3_strategyroom"){
+				// TODO add a dispatcher to send action to tabs
+				if(typeof KC3StrategyTabs[request.action] !== "undefined"){
+					KC3StrategyTabs[request.action](request, sender, response);
+				} else {
+					console.warn("No function found for", request.action);
+				}
+			}
+		});
+		
 		// Add listener to react on URL hash changed
 		window.addEventListener('popstate', KC3StrategyTabs.onpopstate);
 		

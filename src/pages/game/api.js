@@ -292,6 +292,11 @@ var interactions = {
 		}
 	},
 	
+	reloadConfig :function(request, sender, response){
+		ConfigManager.load();
+		// TODO Update some possible Config-related styles
+	},
+	
 	// Quest page is opened, show overlays
 	questOverlay :function(request, sender, response){
 		// Only skip overlay generation if neither of the overlay features is enabled.
