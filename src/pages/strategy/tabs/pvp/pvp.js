@@ -11,6 +11,7 @@
 		
 		exportingReplay: false,
 		stegcover64: "",
+		imgurLimit: 0,
 		
 		toggleMode: 1,
 		
@@ -32,7 +33,7 @@
 			
 			// Download replay button
 			$("#pvp_list").on("click", ".pvp_dl", function(){
-				self.downloadReplay($(this).data("id"));
+				self.downloadReplay($(this).data("id"), $(this));
 			});
 			
 			// Show ship info
@@ -91,6 +92,7 @@
 				$.each(results, function(index, pvpBattle){
 					self.cloneBattleBox(pvpBattle);
 				});
+				$("#pvp_list").createChildrenTooltips();
 			});
 		},
 		
@@ -219,6 +221,7 @@
 			$(".node_detect", targetBox).addClass( nodeInfo.detection[1] );
 			$(".node_airbattle", targetBox).text( nodeInfo.airbattle[0] );
 			$(".node_airbattle", targetBox).addClass( nodeInfo.airbattle[1] );
+			$(".node_airbattle", targetBox).attr("title", nodeInfo.buildAirPowerMessage() );
 			["Fighters","Bombers"].forEach(function(planeType){
 				["player","abyssal"].forEach(function(side,jndex){
 					var nodeName = ".node_"+(planeType[0])+(side[0]=='p' ? 'F' : 'A');
@@ -247,7 +250,7 @@
 		
 		/* DOWNLOAD REPLAY
 		---------------------------------*/
-		downloadReplay :function(pvp_id){
+		downloadReplay :function(pvpId, downloadButton){
 			if(this.exportingReplay) return false;
 			this.exportingReplay = true;
 			
@@ -269,15 +272,18 @@
 			rcanvas.height = 400;
 			var rcontext = rcanvas.getContext("2d");
 			
+			var finishExporting = function(){
+				self.exportingReplay = false;
+				$("body").css("opacity", "1");
+			};
 			var domImg = new Image();
 			domImg.onload = function(){
 				rcontext.drawImage( domImg, 0, 0, 400, 400, 0, 0, 400, 400 );
 				
-				KC3Database.get_pvp_data( pvp_id, function(pvpData){
-					console.debug("Downloading reply", pvp_id, ", data:", pvpData);
+				KC3Database.get_pvp_data( pvpId, function(pvpData){
+					console.debug("Downloading reply", pvpId, ", data:", pvpData);
 					if (pvpData.length === 0) {
-						self.exportingReplay = false;
-						$("body").css("opacity", "1");
+						finishExporting();
 						return false;
 					} else {
 						pvpData = pvpData[0];
@@ -323,25 +329,79 @@
 					
 					steg.encode(JSON.stringify(encodeData), withDataCover64, {
 						success: function(newImg){
-							chrome.downloads.download({
-								url: newImg,
-								filename: ConfigManager.ss_directory+'/replay/'+PlayerManager.hq.name+"_pvp_"+pvpData.id+'.png',
-								conflictAction: "uniquify"
-							}, function(downloadId){
-								self.exportingReplay = false;
-								$("body").css("opacity", "1");
-							});
+							switch(parseInt(ConfigManager.ss_mode, 10)){
+								case 1: uploadReplayToImgur(newImg, pvpData.id, downloadReplayImage); break;
+								default: downloadReplayImage(newImg, pvpData.id); break;
+							}
 						},
 						error: function(e){
 							console.error("Failed to encode replay data by", e, e.stack);
-							self.exportingReplay = false;
-							$("body").css("opacity", "1");
+							finishExporting();
+							alert("Failed to encode replay data!");
 							return false;
 						}
 					});
 					
 				});
 				
+				var uploadReplayToImgur = function(base64Img, pvpId, fallback){
+					var stampNow = Math.floor(Date.now() / 1000);
+					if (stampNow - self.imgurLimit > 10){
+						self.imgurLimit = stampNow;
+					} else {
+						fallback(base64Img, pvpId);
+						return false;
+					}
+					var replayerBaseUrl = "https://kc3kai.github.io/kancolle-replay/battleplayer.html?fromImg=";
+					$.ajax({
+						url: 'https://api.imgur.com/3/credits',
+						method: 'GET',
+						headers: {
+							Authorization: 'Client-ID 088cfe6034340b1',
+							Accept: 'application/json'
+						},
+						success: function (response){
+							if (response.data.UserRemaining > 10 && response.data.ClientRemaining > 100){
+								$.ajax({
+									url: 'https://api.imgur.com/3/image',
+									method: 'POST',
+									headers: {
+										Authorization: 'Client-ID 088cfe6034340b1',
+										Accept: 'application/json'
+									},
+									data: {
+										image: base64Img.split(',')[1],
+										type: 'base64'
+									},
+									success: function (response) {
+										console.info("Replay", pvpId, "imgur image:", response.data.link);
+										window.open(replayerBaseUrl +
+											encodeURIComponent(response.data.link), "kc3_replayer");
+										finishExporting();
+									},
+									error: function () {
+										fallback(base64Img, pvpId);
+									}
+								});
+							} else {
+								fallback(base64Img, pvpId);
+							}
+						},
+						error: function () {
+							fallback(base64Img, pvpId);
+						}
+					});
+				};
+				
+				var downloadReplayImage = function(base64Img, pvpId){
+					chrome.downloads.download({
+						url: base64Img,
+						filename: ConfigManager.ss_directory+'/replay/'+PlayerManager.hq.name+"_pvp_"+pvpId+'.png',
+						conflictAction: "uniquify"
+					}, function(downloadId){
+						finishExporting();
+					});
+				};
 			};
 			domImg.src = this.stegcover64;
 		}
