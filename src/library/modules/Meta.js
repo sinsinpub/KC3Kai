@@ -79,15 +79,15 @@ Provides access to data on built-in JSON files
 			*/
 			
 			// Load Common Meta
-			this._icons		= JSON.parse( $.ajax(repo+'icons.json', { async: false }).responseText );
-			this._exp		= JSON.parse( $.ajax(repo+'exp_hq.json', { async: false }).responseText );
-			this._exp_ship	= JSON.parse( $.ajax(repo+'exp_ship.json', { async: false }).responseText );
-			this._gauges	= JSON.parse( $.ajax(repo+'gauges.json', { async: false }).responseText );
-			this._defeq		= JSON.parse( $.ajax(repo+'defeq.json', { async: false }).responseText );
-			this._edges		= JSON.parse( $.ajax(repo+'edges.json', { async: false }).responseText );
-			this._nodes		= JSON.parse( $.ajax(repo+'nodes.json', { async: false }).responseText );
-			this._tpmult	= JSON.parse( $.ajax(repo+'tp_mult.json', { async: false }).responseText );
-			this._gunfit	= JSON.parse( $.ajax(repo+'gunfit.json', { async: false }).responseText );
+			this._icons		= JSON5.parse( $.ajax(repo+'icons.json', { async: false }).responseText );
+			this._exp		= JSON5.parse( $.ajax(repo+'exp_hq.json', { async: false }).responseText );
+			this._exp_ship	= JSON5.parse( $.ajax(repo+'exp_ship.json', { async: false }).responseText );
+			this._gauges	= JSON5.parse( $.ajax(repo+'gauges.json', { async: false }).responseText );
+			this._defeq		= JSON5.parse( $.ajax(repo+'defeq.json', { async: false }).responseText );
+			this._edges		= JSON5.parse( $.ajax(repo+'edges.json', { async: false }).responseText );
+			this._nodes		= JSON5.parse( $.ajax(repo+'nodes.json', { async: false }).responseText );
+			this._tpmult	= JSON5.parse( $.ajax(repo+'tp_mult.json', { async: false }).responseText );
+			this._gunfit	= JSON5.parse( $.ajax(repo+'gunfit.json', { async: false }).responseText );
 			
 			// Load Translations
 			this._ship 		= KC3Translation.getJSON(repo, 'ships', true);
@@ -101,7 +101,7 @@ Provides access to data on built-in JSON files
 			this._servers	= KC3Translation.getJSON(repo, 'servers', true);
 			this._battle	= KC3Translation.getJSON(repo, 'battle', true);
 			// troll language always loaded
-			this._terms.troll		= JSON.parse( $.ajax(repo+'lang/data/troll/terms.json', { async: false }).responseText );
+			this._terms.troll		= JSON5.parse( $.ajax(repo+'lang/data/troll/terms.json', { async: false }).responseText );
 			// other language loaded here
 			this._terms.lang		= KC3Translation.getJSON(repo, 'terms', true);
 		},

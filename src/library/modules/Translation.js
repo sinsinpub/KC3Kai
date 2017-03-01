@@ -121,7 +121,7 @@
 			if(extendEnglish && language!=="en"){
 				// Load english file
 				try {
-					enJSON = JSON.parse($.ajax({
+					enJSON = JSON5.parse($.ajax({
 						url : repo+'lang/data/en/' + filename + '.json',
 						async: false
 					}).responseText);
@@ -153,7 +153,7 @@
 			// version will be used instead
 			var translation;
 			try {
-				translation = JSON.parse($.ajax({
+				translation = JSON5.parse($.ajax({
 					url : repo+'lang/data/' +language+ '/' + filename + '.json',
 					async: false
 				}).responseText);
@@ -346,7 +346,7 @@
 			var enJSON = {};
 			language = language || ConfigManager.language;
 			try {
-				enJSON = JSON.parse($.ajax({
+				enJSON = JSON5.parse($.ajax({
 					url : repo+'lang/data/en/quotes.json',
 					async: false
 				}).responseText);
@@ -369,7 +369,7 @@
 			} else {
 				// load language specific quotes.json
 				try {
-					langJSON = JSON.parse($.ajax({
+					langJSON = JSON5.parse($.ajax({
 						url : repo+'lang/data/' +language+ '/quotes.json',
 						async: false
 					}).responseText);
