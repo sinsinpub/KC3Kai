@@ -314,7 +314,7 @@ module.exports = function(grunt) {
 			},
 			global_js: {
 				src: [
-					'build/tmp/assets/js/jquery-2.1.3.min.js',
+					'build/tmp/assets/js/jquery.min.js',
 					'build/tmp/assets/js/global.js'
 				],
 				dest: 'build/release/assets/js/global.js'
