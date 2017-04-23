@@ -547,6 +547,10 @@ module.exports = function(grunt) {
 		'qunit'
 	]);
 	
+	grunt.registerTask('package', [
+		'compress:release'
+	]);
+	
 	grunt.registerTask('webstore', [
 		'compress:release',
 		'webstore_upload:kc3kai'
