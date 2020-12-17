@@ -4,7 +4,7 @@ name: CI Build
 on:
   push:
     branches:
-      - webstore
+      - release
 
 jobs:
   build:
@@ -47,32 +47,33 @@ jobs:
       run: |
         grunt build
         echo KC3Kai $PACKAGE_VERSION package build/release.zip will be built
+        grunt package
     # PACKAGE AND DEPLOY TO CHROME WEBSTORE
-    - name: Publish to webstore
-      timeout-minutes: 10
-      env:
-        WEBSTORE_CLIENT_ID: ${{ secrets.WEBSTORE_CLIENT_ID }}
-        WEBSTORE_CLIENT_SECRET: ${{ secrets.WEBSTORE_CLIENT_SECRET }}
-        WEBSTORE_REFRESH_TOKEN: ${{ secrets.WEBSTORE_REFRESH_TOKEN }}
-      run: grunt webstore
+#    - name: Publish to webstore
+#      timeout-minutes: 10
+#      env:
+#        WEBSTORE_CLIENT_ID: ${{ secrets.WEBSTORE_CLIENT_ID }}
+#        WEBSTORE_CLIENT_SECRET: ${{ secrets.WEBSTORE_CLIENT_SECRET }}
+#        WEBSTORE_REFRESH_TOKEN: ${{ secrets.WEBSTORE_REFRESH_TOKEN }}
+#      run: grunt webstore
     # DEPLOY TO GITHUB RELEASES
     - name: Push git tag
       timeout-minutes: 10
       env:
         KC3_VERSION: ${{ env.PACKAGE_VERSION }}
-        GITHUB_TOKEN: ${{ secrets.GH_API_KEY }}
+        GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
       run: |
-        git config --global user.email "dragonjet@kc3.moe"
-        git config --global user.name "Github Actions"
+        git config --global user.email "actions@github.com"
+        git config --global user.name "sinsinpub"
         git tag $KC3_VERSION -a -m "Automated GitHub release for $KC3_VERSION"
-        git push -q https://dragonjet:$GITHUB_TOKEN@github.com/KC3Kai/KC3Kai --tags
+        git push -q https://sinsinpub:$GITHUB_TOKEN@github.com/sinsinpub/KC3Kai --tags
     - name: Create release
       id: create_release
       # https://github.com/actions/create-release
       uses: actions/create-release@v1
       env:
         KC3_VERSION: ${{ env.PACKAGE_VERSION }}
-        GITHUB_TOKEN: ${{ secrets.GH_API_KEY }}
+        GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
       with:
         tag_name: ${{ env.KC3_VERSION }}
         release_name: ${{ env.KC3_VERSION }}
@@ -83,7 +84,7 @@ jobs:
       uses: actions/upload-release-asset@v1
       env:
         KC3_VERSION: ${{ env.PACKAGE_VERSION }}
-        GITHUB_TOKEN: ${{ secrets.GH_API_KEY }}
+        GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: build/release.zip
