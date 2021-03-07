@@ -3,7 +3,7 @@
 \*******************************/
 /* GOOGLE ANALYTICS
 -------------------------------*/
-if (!window.NO_GA) {
+if (!window.NO_GA && window.NO_GA) {
 	var _gaq = _gaq || [];
 	_gaq.push(['_setAccount', 'UA-9789944-12']);
 	(function() {
